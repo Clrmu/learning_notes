@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown + LaTeX 本地阅读器</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markdown-it-texmath/css/texmath.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-texmath/texmath.min.js"></script>
+
+    <style>
+        :root { --primary-color: #2c3e50; }
+        body {
+            font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7f9;
+        }
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        #fileInput {
+            padding: 8px;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #content {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            min-height: 400px;
+        }
+        /* 防止公式溢出 */
+        .katex-display { overflow-x: auto; overflow-y: hidden; }
+        h1 { border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; }
+        code { background: #f0f0f0; padding: 2px 4px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <strong>选择 Markdown 文件:</strong>
+        <input type="file" id="fileInput" accept=".md">
+        <small style="color: #666;">(支持矩阵 \\ 换行和所有标准 LaTeX)</small>
+    </div>
+
+    <div id="content">
+        <p style="color: #999; text-align: center; margin-top: 100px;">
+            请点击上方按钮选择一个 .md 文件进行预览...
+        </p>
+    </div>
+
+    <script>
+        // 3. 初始化 Markdown-it 引擎
+        // use(texmath) 是关键，它让渲染器跳过对 $...$ 内部字符的转义处理
+        const md = window.markdownit({
+            html: true,       // 允许 HTML 标签
+            linkify: true,    // 自动转换链接
+            typographer: true
+        }).use(texmath, {
+            engine: katex,    // 使用 KaTeX 渲染数学
+            delimiters: 'dollars', // 识别 $...$ 和 $$...$$
+            katexOptions: { macros: { "\\RR": "\\mathbb{R}" } }
+        });
+
+        // 4. 处理文件读取逻辑
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            
+            // 读取开始时的提示
+            document.getElementById('content').innerHTML = "正在解析中...";
+
+            reader.onload = function(e) {
+                const text = e.target.result;
+                
+                // 5. 使用 markdown-it 进行渲染
+                // texmath 插件会自动寻找文本中的 $ 符号并调用 KaTeX
+                try {
+                    const renderedHtml = md.render(text);
+                    document.getElementById('content').innerHTML = renderedHtml;
+                } catch (err) {
+                    document.getElementById('content').innerHTML = 
+                        `<div style="color:red">渲染出错: ${err.message}</div>`;
+                }
+            };
+
+            reader.onerror = () => {
+                alert("文件读取失败！");
+            };
+
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>

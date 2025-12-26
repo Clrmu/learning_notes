@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markdown-it-texmath@1.0.0/css/texmath.min.css">
+    
+    <style>
+        body {
+            font-family: -apple-system, "Segoe UI", sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #f4f4f4;
+        }
+        #content {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        .katex-display { overflow-x: auto; padding: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div id="content">正在加载渲染...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it-texmath@1.0.0/texmath.min.js"></script>
+
+    <script type="text/plain" id="markdown-source">
+测试文本
+    </script>
+
+    <script>
+        window.onload = function() {
+            try {
+                // 初始化渲染器
+                const md = window.markdownit({
+                    html: true,
+                    breaks: true,
+                    linkify: true
+                }).use(texmath, {
+                    engine: window.katex,
+                    delimiters: 'dollars',
+                    katexOptions: { macros: { "\\RR": "\\mathbb{R}" } }
+                });
+
+                // 【核心修复】使用 textContent 替代 innerHTML
+                // 这能保证拿到原始的 & 和 < 符号
+                const rawSource = document.getElementById('markdown-source').textContent;
+                
+                // 执行渲染
+                const htmlOutput = md.render(rawSource);
+                
+                // 写入页面
+                document.getElementById('content').innerHTML = htmlOutput;
+            } catch (err) {
+                console.error("渲染错误:", err);
+                document.getElementById('content').innerHTML = "渲染失败，请查看控制台错误信息。";
+            }
+        };
+    </script>
+</body>
+</html>
